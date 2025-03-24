@@ -9,57 +9,73 @@ class AssetManager {
     queueDownload(path) {
         console.log("Queueing " + path);
         this.downloadQueue.push(path);
-    };
+    }
 
     isDone() {
         return this.downloadQueue.length === this.successCount + this.errorCount;
-    };
+    }
 
     downloadAll(callback) {
         if (this.downloadQueue.length === 0) setTimeout(callback, 10);
-        for (var i = 0; i < this.downloadQueue.length; i++) {
-            var that = this;
-
-            var path = this.downloadQueue[i];
-            console.log(path);
-            var ext = path.substring(path.length - 3);
+        for (let i = 0; i < this.downloadQueue.length; i++) {
+            const path = this.downloadQueue[i];
+            const split = path.split(".");
+            const ext = split[split.length - 1];
+            const nameSplit = split[0].split("/");
+            const name = nameSplit[nameSplit.length - 1];
 
             switch (ext) {
                 case 'jpg':
                 case 'png':
-                    var img = new Image();
-                    img.addEventListener("load", function () {
-                        console.log("Loaded " + this.src);
-                        that.successCount++;
-                        if (that.isDone()) callback();
+                    const img = new Image();
+                    img.addEventListener("load", () => {
+                        console.log(`Loaded ${path}`);
+                        this.successCount++;
+                        if (this.isDone()) callback();
                     });
 
-                    img.addEventListener("error", function () {
-                        console.log("Error loading " + this.src);
-                        that.errorCount++;
-                        if (that.isDone()) callback();
+                    img.addEventListener("error", () => {
+                        console.log(`Error loading ${path}`);
+                        this.errorCount++;
+                        if (this.isDone()) callback();
                     });
 
                     img.src = path;
                     this.cache[path] = img;
                     break;
+                case 'json':
+                    fetch(path)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(`Loaded ${path}`);
+                            this.successCount++;
+                            this.cache[path] = data;
+                            if (this.isDone()) callback();
+                        })
+                        .catch(error => {
+                            this.errorCount++;
+                            console.error(error);
+                            if (this.isDone()) callback();
+                        });
+                    break;
                 case 'wav':
                 case 'mp3':
                 case 'mp4':
-                    var aud = new Audio();
-                    aud.addEventListener("loadeddata", function () {
+                case 'qt':
+                    const aud = new Audio();
+                    aud.addEventListener("loadeddata", () => {
                         console.log("Loaded " + this.src);
-                        that.successCount++;
-                        if (that.isDone()) callback();
+                        this.successCount++;
+                        if (this.isDone()) callback();
                     });
 
-                    aud.addEventListener("error", function () {
+                    aud.addEventListener("error", () => {
                         console.log("Error loading " + this.src);
-                        that.errorCount++;
-                        if (that.isDone()) callback();
+                        this.errorCount++;
+                        if (this.isDone()) callback();
                     });
 
-                    aud.addEventListener("ended", function () {
+                    aud.addEventListener("ended", () => {
                         aud.pause();
                         aud.currentTime = 0;
                     });
@@ -69,60 +85,24 @@ class AssetManager {
 
                     this.cache[path] = aud;
                     break;
+              case 'ttf':
+                  const f = new FontFace(name, `url(${path})`);
+                  
+                  f.load().then(() => {
+                      console.log(`Loaded ${path}`);
+                      this.successCount++;
+                      if (this.isDone()) callback();
+                  });
+
+                  
+                  this.cache[path] = f;
+                  break;
             }
         }
-    };
+    }
 
     getAsset(path) {
         return this.cache[path];
-    };
-
-    playAsset(path) {
-        let audio = this.cache[path];
-        if (audio.currentTime != 0) {
-            let bak = audio.cloneNode();
-            bak.currentTime = 0;
-            bak.volume = audio.volume;
-            bak.play();
-        } else {
-            audio.currentTime = 0;
-            audio.play();
-        }
-    };
-
-    muteAudio(mute) {
-        for (var key in this.cache) {
-            let asset = this.cache[key];
-            if (asset instanceof Audio) {
-                asset.muted = mute;
-            }
-        }
-    };
-
-    adjustVolume(volume) {
-        for (var key in this.cache) {
-            let asset = this.cache[key];
-            if (asset instanceof Audio) {
-                asset.volume = volume;
-            }
-        }
-    };
-
-    pauseBackgroundMusic() {
-        for (var key in this.cache) {
-            let asset = this.cache[key];
-            if (asset instanceof Audio) {
-                asset.pause();
-                asset.currentTime = 0;
-            }
-        }
-    };
-
-    autoRepeat(path) {
-        var aud = this.cache[path];
-        aud.addEventListener("ended", function () {
-            aud.play();
-        });
-    };
+    }
 };
 

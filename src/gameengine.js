@@ -30,8 +30,10 @@ class GameEngine {
     start() {
         this.running = true;
         const gameLoop = () => {
-            this.loop();
-            requestAnimFrame(gameLoop, this.ctx.canvas);
+            if(this.running) {
+                this.loop();
+                requestAnimFrame(gameLoop, this.ctx.canvas);
+            }
         };
         gameLoop();
     };
@@ -113,6 +115,9 @@ class GameEngine {
         this.update();
         this.draw();
     };
+    pause() {
+        this.running = false;
+    }
 
 };
 
