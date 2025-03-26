@@ -1,6 +1,10 @@
 // This game shell was happily modified from Googler Seth Ladd's "Bad Aliens" game and his Google IO talk in 2011
+// Modified by Luke Chung to enable ES6, for a more modernized/modular approach to JS
+import {Timer} from "./timer.js"
+import { requestAnimFrame } from "./util.js";
 
-class GameEngine {
+
+export class GameEngine {
     constructor(options) {
         // What you will use to draw
         // Documentation: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
@@ -106,19 +110,19 @@ class GameEngine {
         for (let i = this.entities.length - 1; i >= 0; --i) {
             if (this.entities[i].removeFromWorld) {
                 this.entities.splice(i, 1);
+                this.entity[i] = null; // Nullify to remove dependencies.
             }
         }
     };
 
     loop() {
         this.clockTick = this.timer.tick();
+        this.entities.sort((a,b) => b.z - a.z);
         this.update();
         this.draw();
+        this.click = null;
     };
     pause() {
-        this.running = false;
+
     }
-
 };
-
-// KV Le was here :)

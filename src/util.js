@@ -33,7 +33,7 @@ const rgba = (r, g, b, a) => `rgba(${r}, ${g}, ${b}, ${a})`;
 const hsl = (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`;
 
 /** Creates an alias for requestAnimationFrame for backwards compatibility */
-window.requestAnimFrame = (() => {
+export const requestAnimFrame = (() => {
     return window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame ||
