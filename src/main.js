@@ -1,6 +1,9 @@
 import {GameEngine} from "./gameengine.js";
 import {AssetManager} from "./assetmanager.js"
 import {Stage} from "./scene/stage.js"
+import { FarmingLevel } from "./scene/level/farmingLevel.js"
+import { Round2 } from "./scene/level/round2.js"
+import { Round3 } from "./scene/level/round3.js"
 
 const gameEngine = new GameEngine();
 
@@ -20,5 +23,39 @@ ASSET_MANAGER.downloadAll(() => {
 	gameEngine.init(ctx);
 
 	gameEngine.start();
-	const stage = new Stage(gameEngine, ASSET_MANAGER);
+
+	let currentLevel = new FarmingLevel(gameEngine, ASSET_MANAGER);
+	gameEngine.addEntity(currentLevel);
+
+	// Scene transition logic
+	const originalUpdate = currentLevel.update.bind(currentLevel);
+	currentLevel.update = function() {
+		originalUpdate();
+		if (this.showNextButton && this.game.click) {
+			const { x, y, w, h } = this.nextButtonRect;
+			const mouse = this.game.click;
+			if (mouse.x >= x && mouse.x <= x + w && mouse.y >= y && mouse.y <= y + h) {
+				this.removeFromWorld = true;
+				const round2 = new Round2(gameEngine, ASSET_MANAGER);
+				gameEngine.addEntity(round2);
+
+				// Add transition from round2 to round3
+				const origUpdate2 = round2.update.bind(round2);
+				round2.update = function() {
+					origUpdate2();
+					if (this.showNextButton && this.game.click) {
+						const { x, y, w, h } = this.nextButtonRect;
+						const mouse = this.game.click;
+						if (mouse.x >= x && mouse.x <= x + w && mouse.y >= y && mouse.y <= y + h) {
+							this.removeFromWorld = true;
+							const lineup = [this.units[0]];
+							if (this.selectedRecruit) lineup.push(this.selectedRecruit);
+							const round3 = new Round3(gameEngine, ASSET_MANAGER, lineup);
+							gameEngine.addEntity(round3);
+						}
+					}
+				};
+			}
+		}
+	};
 });
