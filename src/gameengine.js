@@ -109,8 +109,8 @@ export class GameEngine {
 
         for (let i = this.entities.length - 1; i >= 0; --i) {
             if (this.entities[i].removeFromWorld) {
-                this.entities.splice(i, 1);
                 this.entity[i] = null; // Nullify to remove dependencies.
+                this.entities.splice(i, 1);
             }
         }
     };
